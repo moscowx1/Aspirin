@@ -1,0 +1,61 @@
+version: '3'
+services:
+  identity-api:
+    build:
+      context: ./src/back/Identity
+      args:
+        configuration: ${CONFIGURATION}
+    ports:
+      - "5000:8080"
+    depends_on:
+      - identity-pg
+  
+  identity-front:
+    build: 
+      context: ./src/front/
+      dockerfile: ./apps/identity/Dockerfile
+      args:
+        configuration: ${CONFIGURATION}
+    ports:
+      - "5001:80"
+    depends_on:
+      - identity-api
+
+  identity-pg:
+    container_name: postgres-identity
+    image: postgres:16.2-alpine3.18
+    environment:
+      POSTGRES_DB: "identity"
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    volumes:
+      - pg-identity-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - identity-pg
+
+  pg-admin:
+    container_name: pgadmin-admin
+    image: dpage/pgadmin4:8.3
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "default@mail.com"
+      PGADMIN_DEFAULT_PASSWORD: "password"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    restart: unless-stopped
+    ports:
+      - "5002:80"
+    networks:
+      - identity-pg
+    depends_on:
+      - identity-pg
+
+networks:
+  identity-pg:
+    driver: bridge
+
+volumes:
+  pg-identity-data:
+  pgadmin-data:

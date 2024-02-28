@@ -1,12 +1,15 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS publish
+ARG DOTNET_SDK
+ARG DOTNET_RUNTIME
+FROM ${DOTNET_SDK} AS publish
 WORKDIR /src
 COPY Identity.csproj .
 RUN dotnet restore
 COPY . .
-ARG configuration
-RUN dotnet publish Identity.csproj -c $configuration -o /app
+RUN dotnet publish Identity.csproj -o /app
 WORKDIR /app
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM ${DOTNET_RUNTIME} AS base
+ARG CONFIGURATION
+ENV ASPNETCORE_ENVIRONMENT=${CONFIGURATION}
 WORKDIR /app
 COPY --from=publish /app .
 EXPOSE 8080

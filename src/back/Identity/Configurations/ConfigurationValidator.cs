@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Configs;
+namespace Configurations;
 
 public class ConnectionStringsValidator : AbstractValidator<ConnectionStrings>
 {
@@ -10,9 +10,9 @@ public class ConnectionStringsValidator : AbstractValidator<ConnectionStrings>
     }
 }
 
-public class ConfigValidator : AbstractValidator<Config>
+public class ConfigurationValidator : AbstractValidator<Configuration>
 {
-    public ConfigValidator()
+    public ConfigurationValidator()
     {
         RuleFor(c => c.ConnectionStrings).SetValidator(new ConnectionStringsValidator());
     }

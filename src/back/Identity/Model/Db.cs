@@ -1,14 +1,15 @@
+using Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Model;
 
-public class Db : DbContext
+public class Db(Configuration configuration) : DbContext
 {
-    public DbSet<User> Users { get; set; }
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         base.OnConfiguring(optionsBuilder);
-        optionsBuilder.UseNpgsql();
+        optionsBuilder.UseNpgsql(configuration.ConnectionStrings.Identity);
     }
 }

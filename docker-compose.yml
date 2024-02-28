@@ -4,7 +4,9 @@ services:
     build:
       context: ./src/back/Identity
       args:
-        configuration: ${CONFIGURATION}
+        CONFIGURATION: ${BACK_CONFIGURATION}
+        DOTNET_SDK: ${DOTNET_SDK}
+        DOTNET_RUNTIME: ${DOTNET_RUNTIME}
     ports:
       - "5000:8080"
     depends_on:
@@ -15,7 +17,7 @@ services:
       context: ./src/front/
       dockerfile: ./apps/identity/Dockerfile
       args:
-        configuration: ${CONFIGURATION}
+        CONFIGURATION: ${FRONT_CONFIGURATION}
     ports:
       - "5001:80"
     depends_on:

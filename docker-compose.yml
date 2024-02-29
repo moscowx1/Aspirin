@@ -12,8 +12,10 @@ services:
       - "5000:8080"
     networks:
       - identity-pg
+      - kafka
     depends_on:
       - identity-pg
+      - kafka
   
   identity-front:
     build: 
@@ -57,10 +59,39 @@ services:
     depends_on:
       - identity-pg
 
+  kafka:
+    container_name: kafka
+    image: moeenz/docker-kafka-kraft:b8d9574ac375
+    restart: always
+    ports:
+      - "9093:9093"
+    environment:
+      KRAFT_CONTAINER_HOST_NAME: kafka
+      KRAFT_CREATE_TOPICS: topic-a,topic-b,topic-c
+      KRAFT_PARTITIONS_PER_TOPIC: 3
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
+    volumes: 
+      - ./broker/data:/var/lib/kafka/data
+    networks:
+      - kafka
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 5003:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: true
+    volumes:
+      - kui-data:/etc/kafkaui/dynamic_config.yaml
+
 networks:
   identity-pg:
+    driver: bridge
+  kafka:
     driver: bridge
 
 volumes:
   pg-identity-data:
   pgadmin-data:
+  kui-data:

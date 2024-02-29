@@ -9,6 +9,8 @@ RUN dotnet publish Identity.csproj -o /app
 WORKDIR /app
 FROM ${DOTNET_RUNTIME} AS base
 ARG CONFIGURATION
+ARG CON_STRING_ID
+ENV ConnectionStrings:Identity=${CON_STRING_ID}
 ENV ASPNETCORE_ENVIRONMENT=${CONFIGURATION}
 WORKDIR /app
 COPY --from=publish /app .

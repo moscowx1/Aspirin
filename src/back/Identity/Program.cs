@@ -3,6 +3,7 @@ using Autofac.Extensions.DependencyInjection;
 using Configurations;
 using Microsoft.EntityFrameworkCore;
 using Model;
+using Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,19 +16,20 @@ builder.Services.AddSwaggerGen();
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
-{
-    containerBuilder.RegisterInstance<IConfiguration>(builder.Configuration);
-    containerBuilder.RegisterModule<AppModule>(new AppModule(builder.Configuration));
-});
+    containerBuilder.RegisterModule<AppModule>()
+);
+
+builder
+    .Services.AddOptions<Configuration>()
+    .BindConfiguration("")
+    .ValidateFluentValidation()
+    .ValidateOnStart();
 
 var app = builder.Build();
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
 var env = app.Environment.EnvironmentName;
 logger.LogInformation("Starting app in {env}", env);
-
-app.Configuration.Bind(new Configuration());
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

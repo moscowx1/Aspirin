@@ -1,9 +1,8 @@
 using Autofac;
-using Configurations;
 using FluentValidation;
 using Model;
 
-public class AppModule(IConfiguration configuration) : Module
+public class AppModule : Module
 {
     protected override void Load(ContainerBuilder builder)
     {
@@ -15,10 +14,6 @@ public class AppModule(IConfiguration configuration) : Module
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
 
-        builder.RegisterInstance<IConfiguration>(configuration).SingleInstance();
-
         builder.RegisterType<Db>().InstancePerLifetimeScope();
-
-        //builder.RegisterType<M>().As<IHostedService>().SingleInstance();
     }
 }

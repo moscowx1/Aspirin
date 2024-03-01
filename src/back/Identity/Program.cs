@@ -3,12 +3,14 @@ using Autofac.Extensions.DependencyInjection;
 using Configurations;
 using Microsoft.EntityFrameworkCore;
 using Model;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
-
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -24,6 +26,35 @@ builder
     .BindConfiguration("")
     .ValidateFluentValidation()
     .ValidateOnStart();
+
+var otel = builder.Services.AddOpenTelemetry();
+
+otel.ConfigureResource(resource =>
+    resource.AddService(serviceName: builder.Environment.ApplicationName)
+);
+
+otel.WithMetrics(metrics =>
+    metrics
+        .AddAspNetCoreInstrumentation()
+        .AddMeter("Microsoft.AspNetCore.Hosting")
+        .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+        .AddPrometheusExporter()
+);
+
+otel.WithTracing(tracing =>
+{
+    var endpoint = builder.Configuration[
+        nameof(Configuration.ConnectionStrings) + ":" + nameof(ConnectionStrings.OltpEndpoint)
+    ];
+
+    Console.WriteLine($"Endpoint: '{endpoint}'");
+    tracing.AddAspNetCoreInstrumentation();
+    tracing.AddHttpClientInstrumentation();
+    if (endpoint is not null)
+    {
+        tracing.AddOtlpExporter(otlpOptions => otlpOptions.Endpoint = new Uri(endpoint));
+    }
+});
 
 var app = builder.Build();
 var logger = app.Services.GetRequiredService<ILogger<Program>>();

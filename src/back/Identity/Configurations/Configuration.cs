@@ -4,6 +4,8 @@ namespace Configurations;
 public class ConnectionStrings
 {
     public string Identity { get; set; }
+
+    public string OltpEndpoint { get; set; }
 }
 
 public class Configuration

@@ -7,6 +7,7 @@ public class ConnectionStringsValidator : AbstractValidator<ConnectionStrings>
     public ConnectionStringsValidator()
     {
         RuleFor(cs => cs.Identity).NotEmpty().NotNull();
+        RuleFor(cs => cs.OltpEndpoint).NotEmpty().NotNull();
     }
 }
 

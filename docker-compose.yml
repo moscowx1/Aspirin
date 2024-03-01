@@ -8,14 +8,17 @@ services:
         DOTNET_SDK: ${DOTNET_SDK}
         DOTNET_RUNTIME: ${DOTNET_RUNTIME}
         CON_STRING_ID: server=identity-pg;port=5432;database=identity;user Id=${PG_ID_USER};password=${PG_ID_USER}
+        OTLP_ENDPOINT: http://otel:4317
     ports:
       - "5000:8080"
     networks:
       - identity-pg-net
       - kafka-net
+      - metrics
     depends_on:
       - identity-pg
       - kafka
+      - otel
   
   identity-front:
     build: 
@@ -56,8 +59,6 @@ services:
       - "5002:80"
     networks:
       - identity-pg-net
-    depends_on:
-      - identity-pg
 
   kafka:
     container_name: kafka
@@ -84,11 +85,41 @@ services:
       DYNAMIC_CONFIG_ENABLED: true
     networks:
       - kafka-net
+    depends_on:
+      - kafka
+
+  otel:
+    container_name: otel
+    image: otel/opentelemetry-collector:latest
+    command:
+      - --config=/etc/otelcol-config.yml
+    volumes:
+      - ./src/otelcollector/otelcol-config.yml:/etc/otelcol-config.yml
+    depends_on:
+      - prometheus
+    networks:
+      - metrics
+
+  prometheus:
+    container_name: prometheus
+    image: bitnami/prometheus:2.50.1
+    command:
+      - --config.file=/etc/prometheus/prometheus-config.yaml
+    volumes:
+      - prometheus-data:/opt/bitnami/prometheus/data
+      - ./src/prometheus/prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml
+    networks:
+      - metrics
+
 
 networks:
   identity-pg-net:
     driver: bridge
   kafka-net:
+    driver: bridge
+  prometheus-net:
+    driver: bridge
+  metrics:
     driver: bridge
 
 volumes:
@@ -96,3 +127,4 @@ volumes:
   pgadmin-data:
   kui-data:
   kafka-data:
+  prometheus-data:

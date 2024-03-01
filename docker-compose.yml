@@ -11,8 +11,8 @@ services:
     ports:
       - "5000:8080"
     networks:
-      - identity-pg
-      - kafka
+      - identity-pg-net
+      - kafka-net
     depends_on:
       - identity-pg
       - kafka
@@ -40,7 +40,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - identity-pg
+      - identity-pg-net
 
   pg-admin:
     container_name: pgadmin-admin
@@ -55,43 +55,44 @@ services:
     ports:
       - "5002:80"
     networks:
-      - identity-pg
+      - identity-pg-net
     depends_on:
       - identity-pg
 
   kafka:
     container_name: kafka
-    image: moeenz/docker-kafka-kraft:b8d9574ac375
+    image: bitnami/kafka:3.6.1
     restart: always
-    ports:
-      - "9093:9093"
     environment:
-      KRAFT_CONTAINER_HOST_NAME: kafka
-      KRAFT_CREATE_TOPICS: topic-a,topic-b,topic-c
-      KRAFT_PARTITIONS_PER_TOPIC: 3
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
-    volumes: 
-      - ./broker/data:/var/lib/kafka/data
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    volumes:
+    - kafka-data:/bitnami/kafka
     networks:
-      - kafka
+      - kafka-net
 
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest
     ports:
-      - 5003:8080
+      - "5003:8080"
     environment:
       DYNAMIC_CONFIG_ENABLED: true
-    volumes:
-      - kui-data:/etc/kafkaui/dynamic_config.yaml
+    networks:
+      - kafka-net
 
 networks:
-  identity-pg:
+  identity-pg-net:
     driver: bridge
-  kafka:
+  kafka-net:
     driver: bridge
 
 volumes:
   pg-identity-data:
   pgadmin-data:
   kui-data:
+  kafka-data:
